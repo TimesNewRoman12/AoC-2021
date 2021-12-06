@@ -17,8 +17,9 @@ case object Board {
 
 case class Board(rows: List[Row], drawnNumbers: List[Int]) {
   def addRow(row: Row): Board = copy(rows = rows :+ row)
-  def isWin: Boolean = rows.exists(_.intersect(drawnNumbers).size == GridSize) ||
-    columns.exists(_.intersect(drawnNumbers).size == GridSize)
+  def isWin: Boolean =
+    rows.exists(_.intersect(drawnNumbers).size == GridSize) ||
+      columns.exists(_.intersect(drawnNumbers).size == GridSize)
   def unmarkedSum: Int = rows.flatten.diff(drawnNumbers).sum
 
   def columns: List[List[Int]] = (for {
@@ -43,10 +44,10 @@ case object LastBoardWins extends GameResolver {
 }
 
 case class Game(
-                 boards: List[Board],
-                 drawnNumbers: List[Int] = List.empty,
-                 winningBoards: List[Board] = List.empty
-               ) (implicit val gameResolver: GameResolver){
+    boards: List[Board],
+    drawnNumbers: List[Int] = List.empty,
+    winningBoards: List[Board] = List.empty
+)(implicit val gameResolver: GameResolver) {
 
   def applyDrawnNumbers(drawnNumbers: List[Int]): Game = {
     val boardsWithNumbers = for {

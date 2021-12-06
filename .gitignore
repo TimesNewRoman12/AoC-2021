@@ -1,0 +1,6 @@
+.bsp/
+.idea/
+.scalafmt.conf
+out/
+project/
+target/

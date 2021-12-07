@@ -10,7 +10,7 @@ object Solution {
   val Reset = 6
   val Mommy = 0
 
-  def dayGone(swarm: FishCount) = IO.pure {
+  def dayGone(swarm: FishCount): IO[FishCount] = IO.pure {
     def getOlder(age: Int) = if (age == Mommy) Reset else age - 1
     def mommies: Long = swarm.collectFirst { case (age, qty) if age == Mommy => qty } getOrElse 0L
     val swarmed = swarm.map { case (age, qty) => getOlder(age) -> qty } :+ (NewBorn, mommies)

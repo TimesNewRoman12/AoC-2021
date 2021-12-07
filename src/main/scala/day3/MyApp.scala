@@ -5,6 +5,7 @@ import day3.Utils.{inputLines, printAny, toDecimal}
 
 import scala.io.Source
 
+//https://adventofcode.com/2021/day/3
 object MyApp extends IOApp.Simple {
   val run = Solution1.program *> Solution2.program
 }

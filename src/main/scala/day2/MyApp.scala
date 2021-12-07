@@ -3,6 +3,7 @@ package day2
 import cats.effect.IOApp
 import day2.Utils._
 
+//https://adventofcode.com/2021/day/2
 object Solution {
   case class Position(forward: Int, depth: Int) {
     def combine(p: Position): Position = Position(forward + p.forward, depth + p.depth)

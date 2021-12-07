@@ -4,6 +4,7 @@ import cats.effect.IOApp
 import day4.MyApp.{GridSize, Row}
 import day4.Utils._
 
+//https://adventofcode.com/2021/day/4
 object MyApp extends IOApp.Simple {
   type Row = List[Int]
   val GridSize = 5

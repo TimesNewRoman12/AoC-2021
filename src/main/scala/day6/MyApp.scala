@@ -3,6 +3,7 @@ package day6
 import cats.effect.{IO, IOApp}
 import day6.Utils._
 
+//https://adventofcode.com/2021/day/5
 object Solution {
   type FishCount = List[(Int, Long)]
 

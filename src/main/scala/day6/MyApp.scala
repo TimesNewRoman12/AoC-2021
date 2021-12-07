@@ -43,7 +43,7 @@ object Solution {
       .mapValues[Long](_.length)
       .toList
 
-    swarm1 <- daysGone(groupedSwarm, 80)
+    swarm1 <- daysGone(groupedSwarm, days = 80)
     swarm2 <- daysGone(groupedSwarm, days = 256)
 
     _ <- printAny( swarm1.toMap.values.sum )

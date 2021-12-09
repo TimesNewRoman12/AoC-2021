@@ -1,6 +1,7 @@
 package day8
 
 import cats.effect.IOApp
+import cats.implicits.catsSyntaxOptionId
 import day8.Utils._
 
 //https://adventofcode.com/2021/day/8
@@ -8,10 +9,18 @@ object Solution {
   type Decoder = DecoderState => Option[DecoderState]
   type FindFilter = (Digit, Digit) => Boolean
 
-  trait DecoderState {
-    def toDecode: List[Unknown]
-    def unknown: List[Unknown]
-    def known: List[Known]
+  object DecoderState {
+    def apply(entry: Entry): DecoderState =
+      DecoderState(entry.output, entry.signals, List.empty)
+  }
+
+  case class DecoderState(
+    toDecode: List[Unknown],
+    unknown: List[Unknown],
+    known: List[Known]
+  ) {
+    def decode(decoders: List[Decoder]): Option[DecoderState] =
+      decoders.foldLeft(this.some)((acc, decoder) => acc.flatMap(decoder))
 
     def findAs(
       requires: Int,
@@ -28,7 +37,7 @@ object Solution {
 
     def use(value: Int): Option[Known] = known.find(_.value == value)
 
-    def found(matched: Unknown, value: Int): DecoderState = State(
+    def found(matched: Unknown, value: Int): DecoderState = DecoderState(
       toDecode,
       unknown.filterNot(v => v.encoded == matched.encoded),
       known :+ matched.to(value)
@@ -42,26 +51,6 @@ object Solution {
       out <- toDecode
       decoded <- known.find(_ == out)
     } yield decoded
-  }
-
-  object State {
-    def apply(entry: Entry): State =
-      State(entry.output, entry.signals, List.empty)
-  }
-
-  case class State(
-    toDecode: List[Unknown],
-    unknown: List[Unknown],
-    known: List[Known]
-  ) extends DecoderState {
-    def decode(decoders: List[Decoder]): Option[DecoderState] = {
-      def loop(decoders: List[Decoder], acc: DecoderState): Option[DecoderState] =
-        decoders match {
-          case first :: tail => first(acc).flatMap(loop(tail, _))
-          case Nil           => Some(acc)
-        }
-      loop(decoders, this)
-    }
   }
 
   def decode1: List[Decoder] = List(find1, find4, find7, find8)
@@ -92,16 +81,16 @@ object Solution {
    */
   val find9: Decoder = state => state.findAs(4, 9, segments6, contains)
   val find0: Decoder = state => state.findAs(7, 0, segments6, contains)
-  val find6: DecoderState => Option[DecoderState] = state => state.lastAs(6, 6)
+  val find6: Decoder = state => state.lastAs(6, 6)
 
   /*
   2 | 5 segments is not contained in 9
   3 | 5 segments contains 1
   5 | remaining among 5 segments
    */
-  val find2: DecoderState => Option[DecoderState] = state => state.findAs(9, 2, segments5, foundIsNotInUsed)
-  val find3: DecoderState => Option[DecoderState] = state => state.findAs(1, 3, segments5, contains)
-  val find5: DecoderState => Option[DecoderState] = state => state.lastAs(5, 5)
+  val find2: Decoder = state => state.findAs(9, 2, segments5, foundIsNotInUsed)
+  val find3: Decoder = state => state.findAs(1, 3, segments5, contains)
+  val find5: Decoder = state => state.lastAs(5, 5)
 
   sealed trait Digit {
     def encoded: String
@@ -126,12 +115,12 @@ object Solution {
 
   def part1(entries: List[Entry]): Int = (for {
     entry <- entries
-    decoded <- State(entry).decode(decode1)
+    decoded <- DecoderState(entry).decode(decode1)
   } yield decoded.result).flatten.size
 
   def part2(entries: List[Entry]): Int = (for {
     entry <- entries
-    decoded <- State(entry).decode(decode2)
+    decoded <- DecoderState(entry).decode(decode2)
     int = decoded.result.map(_.value.toString).reduce(_ + _).toInt
   } yield int).sum
 

@@ -5,27 +5,30 @@ import day8.Utils._
 
 //https://adventofcode.com/2021/day/8
 object Solution {
-  trait Decode {
+  type Decoder = DecoderState => Option[DecoderState]
+  type FindFilter = (Digit, Digit) => Boolean
+
+  trait DecoderState {
     def toDecode: List[Unknown]
     def unknown: List[Unknown]
     def known: List[Known]
 
     def findAs(
-        requires: Int,
-        as: Int,
-        segmentFilter: Unknown => Boolean,
-        matchCondition: (Digit, Digit) => Boolean
-    ): Option[Decode] =
+      requires: Int,
+      as: Int,
+      segmentFilter: Unknown => Boolean,
+      findFilter: FindFilter,
+    ): Option[DecoderState] =
       for {
         use <- use(requires)
         matched <- unknown
           .filter(segmentFilter)
-          .find(f => matchCondition(f, use))
+          .find(f => findFilter(f, use))
       } yield found(matched, as)
 
     def use(value: Int): Option[Known] = known.find(_.value == value)
 
-    def found(matched: Unknown, value: Int): Decode = State(
+    def found(matched: Unknown, value: Int): DecoderState = State(
       toDecode,
       unknown.filterNot(v => v.encoded == matched.encoded),
       known :+ matched.to(value)
@@ -50,9 +53,9 @@ object Solution {
     toDecode: List[Unknown],
     unknown: List[Unknown],
     known: List[Known]
-  ) extends Decode {
-    def decode(decoders: List[Decoder]): Option[Decode] = {
-      def loop(decoders: List[Decoder], acc: Decode): Option[Decode] =
+  ) extends DecoderState {
+    def decode(decoders: List[Decoder]): Option[DecoderState] = {
+      def loop(decoders: List[Decoder], acc: DecoderState): Option[DecoderState] =
         decoders match {
           case first :: tail => first(acc).flatMap(loop(tail, _))
           case Nil           => Some(acc)
@@ -68,10 +71,9 @@ object Solution {
   val segments5: Unknown => Boolean = _.segments == 5
   val segments6: Unknown => Boolean = _.segments == 6
 
-  val contains: (Digit, Digit) => Boolean = (used, found) => used.contains(found)
-  val foundIsNotInUsed: (Digit, Digit) => Boolean = (used, found) => !found.contains(used)
+  val contains: FindFilter = (used, found) => used.contains(found)
+  val foundIsNotInUsed: FindFilter = (used, found) => !found.contains(used)
 
-  type Decoder = Decode => Option[Decode]
   /*
   1 | the only among 2 segments
   4 | the only among 4 segments
@@ -90,16 +92,16 @@ object Solution {
    */
   val find9: Decoder = state => state.findAs(4, 9, segments6, contains)
   val find0: Decoder = state => state.findAs(7, 0, segments6, contains)
-  val find6: Decode => Option[Decode] = state => state.lastAs(6, 6)
+  val find6: DecoderState => Option[DecoderState] = state => state.lastAs(6, 6)
 
   /*
   2 | 5 segments is not contained in 9
   3 | 5 segments contains 1
   5 | remaining among 5 segments
    */
-  val find2: Decode => Option[Decode] = state => state.findAs(9, 2, segments5, foundIsNotInUsed)
-  val find3: Decode => Option[Decode] = state => state.findAs(1, 3, segments5, contains)
-  val find5: Decode => Option[Decode] = state => state.lastAs(5, 5)
+  val find2: DecoderState => Option[DecoderState] = state => state.findAs(9, 2, segments5, foundIsNotInUsed)
+  val find3: DecoderState => Option[DecoderState] = state => state.findAs(1, 3, segments5, contains)
+  val find5: DecoderState => Option[DecoderState] = state => state.lastAs(5, 5)
 
   sealed trait Digit {
     def encoded: String

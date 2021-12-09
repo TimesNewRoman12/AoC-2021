@@ -22,9 +22,9 @@ object Solution {
     def decode(decoders: List[Decoder]): Option[DecoderState] =
       decoders.foldLeft(this.some)((acc, decoder) => acc.flatMap(decoder))
 
-    def findAs(
+    def find(
+      value: Int,
       requires: Int,
-      as: Int,
       segmentFilter: Unknown => Boolean,
       findFilter: FindFilter,
     ): Option[DecoderState] =
@@ -33,7 +33,7 @@ object Solution {
         matched <- unknown
           .filter(segmentFilter)
           .find(f => findFilter(f, use))
-      } yield found(matched, as)
+      } yield found(matched, value)
 
     def use(value: Int): Option[Known] = known.find(_.value == value)
 
@@ -43,9 +43,9 @@ object Solution {
       known :+ matched.to(value)
     )
 
-    def lastAs(segments: Int, as: Int): Option[DecoderState] = for {
+    def last(value: Int, segments: Int): Option[DecoderState] = for {
       use <- unknown.find(filterBySegments(_, segments))
-    } yield found(use, as)
+    } yield found(use, value)
 
     def result: Seq[Known] = for {
       out <- toDecode
@@ -69,28 +69,28 @@ object Solution {
   7 | the only among 3 segments
   8 | the only among 7 segments
    */
-  val find1: Decoder = state => state.lastAs(2, 1)
-  val find4: Decoder = state => state.lastAs(4, 4)
-  val find7: Decoder = state => state.lastAs(3, 7)
-  val find8: Decoder = state => state.lastAs(7, 8)
+  val find1: Decoder = state => state.last(value = 1, segments = 2)
+  val find4: Decoder = state => state.last(value = 4, segments = 4)
+  val find7: Decoder = state => state.last(value = 7, segments = 3)
+  val find8: Decoder = state => state.last(value = 8, segments = 7)
 
   /*
   9 | 6 segments, containing 4
   0 | 6 segments, containing 7
   6 | remaining among 6 segments
    */
-  val find9: Decoder = state => state.findAs(4, 9, segments6, contains)
-  val find0: Decoder = state => state.findAs(7, 0, segments6, contains)
-  val find6: Decoder = state => state.lastAs(6, 6)
+  val find9: Decoder = state => state.find(value = 9, requires = 4, segments6, contains)
+  val find0: Decoder = state => state.find(value = 0, requires = 7, segments6, contains)
+  val find6: Decoder = state => state.last(value = 6, segments = 6)
 
   /*
   2 | 5 segments is not contained in 9
   3 | 5 segments contains 1
   5 | remaining among 5 segments
    */
-  val find2: Decoder = state => state.findAs(9, 2, segments5, foundIsNotInUsed)
-  val find3: Decoder = state => state.findAs(1, 3, segments5, contains)
-  val find5: Decoder = state => state.lastAs(5, 5)
+  val find2: Decoder = state => state.find(value = 2, requires = 9, segments5, foundIsNotInUsed)
+  val find3: Decoder = state => state.find(value = 3, requires = 1, segments5, contains)
+  val find5: Decoder = state => state.last(value = 5, segments = 5)
 
   sealed trait Digit {
     def encoded: String

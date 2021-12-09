@@ -43,7 +43,7 @@ object Solution {
       known :+ matched.to(value)
     )
 
-    def lastAs(segments: Int, as: Int) = for {
+    def lastAs(segments: Int, as: Int): Option[DecoderState] = for {
       use <- unknown.find(filterBySegments(_, segments))
     } yield found(use, as)
 
@@ -106,12 +106,7 @@ object Solution {
 
   case class Known(encoded: String, value: Int) extends Digit
 
-  case class Entry(signals: List[Unknown], output: List[Unknown]) {
-    def decodedOutput(decoded: List[Known]): Int = (for {
-      out <- output
-    } yield decoded
-      .find(_ == out)).flatten.map(_.value.toString).reduce(_ + _).toInt
-  }
+  case class Entry(signals: List[Unknown], output: List[Unknown])
 
   def part1(entries: List[Entry]): Int = (for {
     entry <- entries

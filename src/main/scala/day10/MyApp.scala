@@ -23,7 +23,7 @@ object Solution {
   case object Valid extends Chunk
 
   case object Chunk {
-    def unfinishedOrValid(expected: List[Char]): Chunk =
+    def incompleteOrValid(expected: List[Char]): Chunk =
       if (expected.isEmpty) Valid
       else Incomplete(expected)
   }
@@ -38,7 +38,7 @@ object Solution {
         else
           Corrupted(head, expected)
       case Nil =>
-        Chunk.unfinishedOrValid(expected)
+        Chunk.incompleteOrValid(expected)
     }
 
   def parseChunks(input: List[List[Char]]): List[Chunk] =

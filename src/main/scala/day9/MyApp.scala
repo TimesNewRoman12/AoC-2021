@@ -50,7 +50,7 @@ object Solution {
       col <- matrix.yIndices
       row <- matrix.xIndices
       digit <- matrix.get(row, col)
-    } yield (digit, matrix.hvNeighbors(row, col))).toList
+    } yield (digit, matrix.hvNeighbours(row, col))).toList
   }
 
   def part2(matrix: Matrix[Int]): Int = {

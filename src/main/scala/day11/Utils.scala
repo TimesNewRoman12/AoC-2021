@@ -11,7 +11,7 @@ object Utils {
 
     val entries = for {
       line <- lines
-    } yield line.toList
+    } yield line.toList.map(_.toString.toInt)
 
     source.close()
     entries

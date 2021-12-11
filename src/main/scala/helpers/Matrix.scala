@@ -8,6 +8,15 @@ case object Matrix {
 }
 
 case class Matrix[T](input: List[List[T]]) {
+  def printOut: Unit = input.foreach(row => println(row.mkString))
+
+  def to[TT](apply: T => TT): Matrix[TT] =
+    Matrix(
+      for {
+        row <- input
+      } yield row.map(apply)
+    )
+
   def get(x: X, y: Y): Option[T] = input.lift(y).flatMap(_.lift(x))
 
   def height: Int = input.size

@@ -161,9 +161,9 @@ object Solution {
   case class Connection(p1: String, p2: String)
 
   val program = for {
-    //input <- readNumbers("day12/input_example.txt")
+    input <- readNumbers("day12/input_example.txt")
     //input <- readNumbers("day12/test.txt")
-    input <- readNumbers("day12/input.txt")
+    //input <- readNumbers("day12/input.txt")
 
     connections = input.map(fromString)
 

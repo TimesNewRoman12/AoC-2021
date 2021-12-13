@@ -4,7 +4,7 @@ import helpers.Matrix.{X, Y}
 
 import scala.annotation.tailrec
 
-case object Matrix {
+object Matrix {
   type X = Int
   type Y = Int
 }

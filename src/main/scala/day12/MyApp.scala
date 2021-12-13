@@ -4,6 +4,8 @@ import cats.effect.{IO, IOApp}
 import day12.Solution.Connection.fromString
 import day12.Utils._
 
+import java.time.Instant
+
 //https://adventofcode.com/2021/day/12
 object Solution {
 
@@ -50,13 +52,25 @@ object Solution {
           //all options checked
           if (currentPath == List("start")) paths
           else {
-            val exclusionKey = currentPath.dropRight(1)
-            val exclusionValue = exclusions.getOrElse(exclusionKey, List.empty)
-            loop(
-              List("start"),
-              paths :+ currentPath,
-              exclusions + (exclusionKey -> (exclusionValue :+ currentPath.last))
-            )
+            if (currentPath.lastOption.contains("end")) {
+              val exclusionKey = currentPath.dropRight(1)
+              val exclusionValue =
+                exclusions.getOrElse(exclusionKey, List.empty)
+              loop(
+                List("start"),
+                paths :+ currentPath,
+                exclusions + (exclusionKey -> (exclusionValue :+ currentPath.last))
+              )
+            } else {
+              val exclusionKey = currentPath.dropRight(1)
+              val exclusionValue =
+                exclusions.getOrElse(exclusionKey, List.empty)
+              loop(
+                List("start"),
+                paths,
+                exclusions + (exclusionKey -> (exclusionValue :+ currentPath.last))
+              )
+            }
           }
       }
     }
@@ -70,7 +84,7 @@ object Solution {
     println(startEndPaths.length)
   }
 
-  //TODO: figure a better solution because this took like 1 hour to get a result for my PC
+  //TODO: reduced part2 to 70 seconds
   def part2(
       allConnections: List[Connection]
   ): IO[Int] = IO.pure {
@@ -94,7 +108,10 @@ object Solution {
           .filterNot(List("start", "end").contains(_))
           .filter(cave => cave.forall(_.isLower))
 
-      val smallCaveVisitedTwice = smallCavesVisited.groupBy(identity).values.collectFirst { case x :: _ :: Nil => x }
+      val smallCaveVisitedTwice =
+        smallCavesVisited.groupBy(identity).values.collectFirst {
+          case x :: _ :: Nil => x
+        }
 
       val smallCaves =
         if (smallCaveVisitedTwice.isDefined)
@@ -117,13 +134,25 @@ object Solution {
           //all options checked
           if (currentPath == List("start")) paths
           else {
-            val exclusionKey = currentPath.dropRight(1)
-            val exclusionValue = exclusions.getOrElse(exclusionKey, List.empty)
-            loop(
-              List("start"),
-              paths :+ currentPath,
-              exclusions + (exclusionKey -> (exclusionValue :+ currentPath.last))
-            )
+            if (currentPath.lastOption.contains("end")) {
+              val exclusionKey = currentPath.dropRight(1)
+              val exclusionValue =
+                exclusions.getOrElse(exclusionKey, List.empty)
+              loop(
+                List("start"),
+                paths :+ currentPath,
+                exclusions + (exclusionKey -> (exclusionValue :+ currentPath.last))
+              )
+            } else {
+              val exclusionKey = currentPath.dropRight(1)
+              val exclusionValue =
+                exclusions.getOrElse(exclusionKey, List.empty)
+              loop(
+                List("start"),
+                paths,
+                exclusions + (exclusionKey -> (exclusionValue :+ currentPath.last))
+              )
+            }
           }
       }
     }
@@ -145,9 +174,11 @@ object Solution {
 
     connections = input.map(fromString)
 
-    _ = part1(connections)
-    //res2 <- part2(connections)
-    //_ <- printAny(res2)
+    t1 = Instant.now().toEpochMilli
+    //_ = part1(connections)
+    res2 <- part2(connections)
+    _ <- printAny(res2)
+    _ <- printAny(s"time: ${Instant.now().toEpochMilli - t1}")
 
   } yield ()
 }

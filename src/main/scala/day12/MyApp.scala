@@ -77,11 +77,7 @@ object Solution {
 
     val allPaths = loop(List("start"))
 
-    val startEndPaths = allPaths
-      .filter(_.last == "end")
-      .distinct
-
-    println(startEndPaths.length)
+    println(allPaths.length)
   }
 
   //TODO: reduced part2 to 70 seconds
@@ -159,17 +155,14 @@ object Solution {
 
     val allPaths = loop(List("start"))
 
-    val startEndPaths = allPaths
-      .filter(_.last == "end")
-      .distinct
-
-    startEndPaths.length
+    allPaths.length
   }
 
   case class Connection(p1: String, p2: String)
 
   val program = for {
     //input <- readNumbers("day12/input_example.txt")
+    //input <- readNumbers("day12/test.txt")
     input <- readNumbers("day12/input.txt")
 
     connections = input.map(fromString)

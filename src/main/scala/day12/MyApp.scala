@@ -17,16 +17,9 @@ object Solution {
   }
 
   def part1(
-      allConnections: List[Connection]
+      allConnections: List[Connection],
+      mappedConnections: Map[String, List[String]],
   ): Unit = {
-
-    def connectionsTo(p: String): List[String] = {
-      allConnections.filter(_.p1 == p).map(_.p2) :::
-        allConnections.filter(_.p2 == p).map(_.p1)
-    }
-
-    println(connectionsTo("start"))
-
     def loop(
         currentPath: List[String],
         paths: List[List[String]] = List.empty,
@@ -34,7 +27,7 @@ object Solution {
     ): List[List[String]] = {
 
       val p1 = currentPath.last
-      val cons: List[String] = connectionsTo(p1).filterNot(_ == p1)
+      val cons: List[String] = mappedConnections(p1)
 
       val lowerCases = currentPath.filter(_.forall(_.isLower))
 
@@ -80,16 +73,30 @@ object Solution {
     println(allPaths.length)
   }
 
-  //TODO: reduced part2 to 70 seconds
-  def part2(
-      allConnections: List[Connection]
-  ): IO[Int] = IO.pure {
+  def mappedConnections(connections: List[Connection]): Map[String, List[String]] = {
+    val allPoints = connections
+      .foldLeft(List.empty[String]) { case (acc, c) =>
+        acc :+ c.p1 :+ c.p2
+      }
+      .distinct
+
+    val emptyMap = Map.empty[String, List[String]]
 
     def connectionsTo(p: String): List[String] = {
-      allConnections.filter(_.p1 == p).map(_.p2) :::
-        allConnections.filter(_.p2 == p).map(_.p1)
+      connections.filter(_.p1 == p).map(_.p2) :::
+        connections.filter(_.p2 == p).map(_.p1)
     }
 
+    allPoints.foldLeft(emptyMap) { case (map, point) =>
+      map + (point -> connectionsTo(point))
+    }
+  }
+
+  //TODO: reduced part2 to 70 seconds
+  def part2(
+      allConnections: List[Connection],
+      mappedConnections: Map[String, List[String]],
+  ): IO[Int] = IO.pure {
     def loop(
         currentPath: List[String],
         paths: List[List[String]] = List.empty,
@@ -97,7 +104,8 @@ object Solution {
     ): List[List[String]] = {
 
       val p1 = currentPath.last
-      val cons: List[String] = connectionsTo(p1).filterNot(_ == p1)
+      //val cons: List[String] = connectionsTo(p1).filterNot(_ == p1)
+      val cons: List[String] = mappedConnections(p1)
 
       val smallCavesVisited =
         currentPath
@@ -161,16 +169,17 @@ object Solution {
   case class Connection(p1: String, p2: String)
 
   val program = for {
-    input <- readNumbers("day12/input_example.txt")
+    //input <- readNumbers("day12/input_example.txt")
     //input <- readNumbers("day12/test.txt")
-    //input <- readNumbers("day12/input.txt")
+    input <- readNumbers("day12/input.txt")
 
     connections = input.map(fromString)
+    allConnectionsMap = mappedConnections(connections)
 
     t1 = Instant.now().toEpochMilli
-    //_ = part1(connections)
-    res2 <- part2(connections)
-    _ <- printAny(res2)
+    _ = part1(connections, allConnectionsMap)
+    //res2 <- part2(connections, allConnectionsMap)
+    //_ <- printAny(res2)
     _ <- printAny(s"time: ${Instant.now().toEpochMilli - t1}")
 
   } yield ()

@@ -28,8 +28,8 @@ object Solution {
                 val count = acc.getOrElse(pair, 0)
                 acc + (pair -> (count + 1))
             }
-          println(s"$pair => $res")
-          println(s"producedPairs => $producedPairs")
+          //println(s"$pair => $res")
+          //println(s"producedPairs => $producedPairs")
           acc + (pair -> producedPairs)
       }
 
@@ -44,7 +44,17 @@ object Solution {
         updatedMap
       }
 
-    val result: Map[String, Int] = once(polymer)
+    def polymerToMap(acc: String) =
+      acc.sliding(2).foldLeft(Map.empty[String, Int]) { case (acc, pair) =>
+        val produced =  acc.getOrElse(pair, 0)
+        acc + (pair -> (produced + 1))
+      }
+
+    val polymerAsMap = polymerToMap(polymer)
+    println(polymerAsMap)
+
+    //val result: Map[String, Int] = once(polymer)
+    //println(result)
 
     /*
     def loop(acc: Map[String, Int], steps: Int) = {
@@ -57,7 +67,7 @@ object Solution {
 
      */
 
-    println(result)
+
   }
 
   def part1(polymer: String, pairs: Map[String, String], steps: Int): String = {

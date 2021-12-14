@@ -52,11 +52,8 @@ object Solution {
 
     val polymerAsMap = polymerToMap(polymer)
 
-    def loop(polymerAsMap: Map[String, Long], steps: Int): Map[String, Long] = {
-      (1 to steps).foldLeft(polymerAsMap) { case (acc, _) =>
-        once(acc)
-      }
-    }
+    def loop(polymerAsMap: Map[String, Long], steps: Int): Map[String, Long] =
+      (1 to steps).foldLeft(polymerAsMap) { case (acc, _) => once(acc) }
 
     val result = loop(polymerAsMap, steps)
     val letters = pairs.values.toList.distinct

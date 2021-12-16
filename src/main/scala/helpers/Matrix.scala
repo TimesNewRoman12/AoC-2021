@@ -77,6 +77,12 @@ case class Matrix[T](input: List[List[T]]) {
     row <- xIndices
   } yield (row, col)
 
+  def xyWithValue: Seq[((X, Y), T)] = for {
+    col <- yIndices
+    row <- xIndices
+    v <- get(row, col)
+  } yield ((row, col), v)
+
   def getMapped(x: X, y: Y): Option[((X, Y), T)] =
     get(x, y).map((x, y) -> _)
 
@@ -116,6 +122,8 @@ case class Matrix[T](input: List[List[T]]) {
       get(x, y + 1)
     ).flatten
   }
+
+  def last: Option[T] = get(width - 1, height - 1)
 
   def hvdNeighbours(x: X, y: Y): List[T] = {
     hvNeighbours(x, y) ::: dNeighbours(x, y)

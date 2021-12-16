@@ -61,9 +61,9 @@ object Solution {
   }
 
   val program = for {
-    input <- readNumbers("day15/input.txt")
+    //input <- readNumbers("day15/input.txt")
     //input <- readNumbers("day15/input_example.txt")
-    //input <- readNumbers("day15/test.txt")
+    input <- readNumbers("day15/test.txt")
 
     matrix = Matrix(input).map(Area(_))
     part1 = calculateWeight(matrix).last.map(_.totalRisk)

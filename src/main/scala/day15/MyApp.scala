@@ -34,32 +34,30 @@ object Solution {
     val enlarged = enlarge(input, 5)
     val matrix = Matrix(enlarged).map(Area(_))
 
-    //matrix.printOut
-
     val weighted = calculateWeight(matrix)
 
     weighted.last.map(_.totalRisk)
   }
 
+  //TODO: less brute force solution
   @tailrec
   def calculateWeight(matrix: Matrix[Area]): Matrix[Area] = {
 
     val matrixWithEntry = matrix.mapAt(0, 0, _.asEntry)
-    matrixWithEntry.xy.foldLeft(matrixWithEntry) { case (m, (x, y)) =>
+    val res = matrixWithEntry.xy.foldLeft(matrixWithEntry) { case (m, (x, y)) =>
       val withNeighbors =
         m.hvNeighboursMapped(x, y).foldLeft(m) { case (m, ((xx, yy), nArea)) =>
-          println(xx, yy)
           val mainAreaRisk = m.get(x, y).map(_.totalRisk).getOrElse(-199)
           val totalRisk = mainAreaRisk + nArea.risk
-          // need to go on deeper levels and add more recursion ?
-          if (totalRisk < nArea.totalRisk) calculateWeight(m.mapAt(xx, yy, _.setRisk(totalRisk)))
+          if (totalRisk < nArea.totalRisk) m.mapAt(xx, yy, _.setRisk(totalRisk))
           else m
         }
 
       withNeighbors
     }
 
-
+    if (res == matrixWithEntry) res
+    else calculateWeight(res)
   }
 
   val program = for {
@@ -72,11 +70,7 @@ object Solution {
 
     _ = println(part1.last)
 
-    //_ <- printAny{ part2(input) }
-
-
-
-    //_ = r.printOut
+    _ <- printAny{ part2(input) }
   } yield ()
 }
 

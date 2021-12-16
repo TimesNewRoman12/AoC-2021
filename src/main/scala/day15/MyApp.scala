@@ -47,7 +47,7 @@ object Solution {
     val res = matrixWithEntry.xy.foldLeft(matrixWithEntry) { case (m, (x, y)) =>
       val withNeighbors =
         m.hvNeighboursMapped(x, y).foldLeft(m) { case (m, ((xx, yy), nArea)) =>
-          val mainAreaRisk = m.get(x, y).map(_.totalRisk).getOrElse(-199)
+          val mainAreaRisk = m.get(x, y).map(_.totalRisk).get
           val totalRisk = mainAreaRisk + nArea.risk
           if (totalRisk < nArea.totalRisk) m.mapAt(xx, yy, _.setRisk(totalRisk))
           else m

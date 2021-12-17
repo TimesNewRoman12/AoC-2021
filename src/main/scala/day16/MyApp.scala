@@ -77,13 +77,6 @@ object Solution {
         Operator(binaryToDecimal(version), binaryToDecimal(id), packets)
       )
     }
-    /*
-    def ignoreZeroes(buffer: String): String = {
-      val isZero = buffer.take(1) == "0"
-      if (isZero) ignoreZeroes(buffer.drop(1))
-      else buffer
-    }
-     */
 
     def readLength(
         buffer: Buffer,
@@ -91,8 +84,6 @@ object Solution {
         packets: List[Packet] = List.empty
     ): IO[(Buffer, List[Packet])] = {
       require(length > 0)
-      println(s"readLength buffer: $buffer")
-      println(s"readLength length: $length")
       for {
         taken <- buffer.take(length)
         (buffer, content) = taken
@@ -101,7 +92,8 @@ object Solution {
         taken <-
           if (subBuffer.isEmpty) IO { (buffer, packets :+ packet) }
           else readLength(subBuffer, subBuffer.length, packets :+ packet)
-        (_, packets) = taken
+        (_, packets) =
+          taken // this sub-buffer is going to get depleted and is not used further
       } yield (buffer, packets)
     }
 
@@ -111,8 +103,6 @@ object Solution {
         packets: List[Packet] = List.empty
     ): IO[(Buffer, List[Packet])] = {
       require(count > 0)
-      println(s"readCount buffer: $buffer")
-      println(s"readCount length: $count")
       for {
         taken <- reads(buffer)
         (buffer, packet) = taken
@@ -126,14 +116,12 @@ object Solution {
 
     def reads(buffer: Buffer): IO[(Buffer, Packet)] = {
       val id = binaryToDecimal(buffer.scan(3, 6))
-      println(s"BUFFER: $buffer, $id")
 
       for {
         result <- id match {
           case LITERAL => readLiteral(buffer)
           case _       => readOperator(buffer)
         }
-        _ = println(s"result: $result")
       } yield result
     }
   }
@@ -142,10 +130,11 @@ object Solution {
     def loop(packet: Packet, sum: Int = 0): Int = {
       packet match {
         case o: Operator =>
-          o.packets.foldLeft(sum) { case (_, packet) =>
-            loop(packet, sum + o.version)
-          }
-        case l: Literal => sum + l.version
+          o.packets.foldLeft(sum) { case (acc, packet) =>
+            loop(packet, acc)
+          } + o.version
+        case l: Literal =>
+          sum + l.version
       }
     }
 
@@ -159,7 +148,8 @@ object Solution {
 
   case class Literal(version: Int, content: List[String]) extends Packet {
     val id: Int = LITERAL
-    //override def toString = binaryToDecimal(content.mkString).toString
+    def value: Long = BigInt(content.mkString, 2).longValue
+    override def toString = value.toString
   }
 
   case object Operator {
@@ -170,16 +160,16 @@ object Solution {
       extends Packet
 
   val program = for {
-    //input <- readHex("day16/input.txt")
+    input <- readHex("day16/input.txt")
     //input <- readHex("day16/input_example.txt")
-    input <- readHex("day16/test.txt")
+    //input <- readHex("day16/test.txt")
 
     result <- reads(Buffer(input))
 
     (buffer, packet) = result
 
     _ <- printAny { packet }
-    _ <- printAny { versionSum(packet) }
+    _ <- printAny { s"part1: ${versionSum(packet)}" }
 
   } yield ()
 }

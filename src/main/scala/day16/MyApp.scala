@@ -184,7 +184,6 @@ object Solution {
     input <- readHex("day16/input.txt")
     //input <- readHex("day16/input_example.txt")
     //input <- readHex("day16/test.txt")
-
     result <- reads(Buffer(input))
 
     (buffer, packet) = result
@@ -193,7 +192,6 @@ object Solution {
     _ <- printAny { s"part1: ${versionSum(packet)}" }
 
     _ <- printAny { s"part2: ${packet.value}" }
-
   } yield ()
 }
 

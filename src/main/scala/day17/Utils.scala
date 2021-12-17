@@ -1,7 +1,7 @@
 package day17
 
 import cats.effect.IO
-import day17.Solution.Point
+import day17.Solution.Range
 
 import scala.io.Source
 
@@ -23,7 +23,7 @@ object Utils {
     val yMax = range.drop(yIndex+yMin.length+4).takeWhile(_ != ',')
 
 
-    (Point(xMin.toInt, xMax.toInt), Point(yMin.toInt, yMax.toInt))
+    (Range(xMin.toInt, xMax.toInt), Range(yMin.toInt, yMax.toInt))
   }
 
   def printAny(any: Any) = IO { println(any) }

@@ -2,7 +2,6 @@ package day17
 
 import cats.effect.IOApp
 import cats.implicits.catsSyntaxOptionId
-import day17.Solution.Trajectory
 import day17.Utils._
 
 //https://adventofcode.com/2021/day/17
@@ -12,14 +11,65 @@ object Solution {
   case class Velocity(x: Int, y: Int)
   case class Coords(x: Int, y: Int)
 
-  case class Trajectory(startVelocity: Velocity, path: List[Coords] = List.empty) {
+  case class Trajectory(
+      startVelocity: Velocity,
+      path: List[Coords] = List.empty
+  ) {
     def addCoords(c: Coords): Trajectory = copy(path = path :+ c)
     def maxY: Int = if (path.nonEmpty) path.map(_.y).max else 0
   }
 
-  def findY(yRange: Range) = {
-    def loop(currVelocity: Int, trajectory: Trajectory, currY: Int = 0): Option[Trajectory] = {
-      //println(currY)
+  def part2(xRange: Range, yRange: Range) = {
+    def loop(
+        currVelocity: Velocity,
+        trajectory: Trajectory,
+        currPos: Coords = Coords(0, 0)
+    ): Option[Trajectory] = {
+      val newPos =
+        Coords(currPos.x + currVelocity.x, currPos.y + currVelocity.y)
+      val newVelocityY = currVelocity.y - 1
+      val newVelocityX =
+        if (currVelocity.x > 0) currVelocity.x - 1
+        else if (currVelocity.x < 0) currVelocity.x + 1
+        else 0
+
+      val newVelocity = Velocity(newVelocityX, newVelocityY)
+
+      if (currPos.y < yRange.min || currPos.x > xRange.max)
+        None
+      else if (
+        currPos.y <= yRange.max && currPos.y >= yRange.min &&
+        currPos.x >= xRange.min && currPos.x <= xRange.max
+      )
+        trajectory.some
+      else
+        loop(
+          newVelocity,
+          trajectory.addCoords(Coords(currPos.x, currPos.y)),
+          newPos
+        )
+    }
+
+    val velocities = for {
+      x <- 1 to 100 // actual range 12 to 96
+      y <- -200 to 200 // actual range -179 to 170
+    } yield Velocity(x, y)
+
+    val trajectories = velocities.foldLeft(List.empty[Trajectory]) {
+      case (acc, startingVelocity) =>
+        val trajectory = loop(startingVelocity, Trajectory(startingVelocity))
+        trajectory.map(t => acc :+ t).getOrElse(acc)
+    }
+
+    trajectories.length
+  }
+
+  def part1(yRange: Range) = {
+    def loop(
+        currVelocity: Int,
+        trajectory: Trajectory,
+        currY: Int = 0
+    ): Option[Trajectory] = {
       val newY = currY + currVelocity
 
       if (currY > yRange.max)
@@ -30,47 +80,16 @@ object Solution {
         None
     }
 
-    val trajectories = ( 1 to 1000).foldLeft(List.empty[Option[Trajectory]]) { case (acc, startingVelocity) =>
-      val result = loop(startingVelocity, Trajectory(Velocity(0, startingVelocity)))
-      acc :+ result
+    val trajectories = (1 to 200).foldLeft(List.empty[Option[Trajectory]]) {
+      case (acc, startingVelocity) =>
+        val result =
+          loop(startingVelocity, Trajectory(Velocity(0, startingVelocity)))
+        acc :+ result
     }
 
     println(s"length: ${trajectories.flatten.length}")
-
     trajectories.flatten.map(_.maxY).max
   }
-
-
-  def checkY(yVelocity: Int, steps: Int) = {
-    def loop(currVelocity: Int, currY: Int = 0, currStep: Int = 0): Int = {
-
-      println(currY)
-
-      if (currStep == steps) currY
-      else loop(currVelocity - 1, currY + currVelocity, currStep + 1)
-    }
-
-    loop(yVelocity)
-  }
-
-  def checkX(xVelocity: Int, steps: Int) = {
-    def loop(currVelocity: Int, currX: Int = 0, currStep: Int = 0): Int = {
-
-      println(currX)
-
-      if (currStep == steps) currX
-      else {
-        val newVelocity = if (currVelocity > 0) currVelocity - 1
-        else if (currVelocity < 0) currVelocity + 1
-        else 0
-        loop(newVelocity, currX + newVelocity, currStep + 1)
-      }
-    }
-
-    loop(xVelocity)
-  }
-
-
 
   val program = for {
     input <- readRanges("day17/input.txt")
@@ -79,9 +98,8 @@ object Solution {
 
     _ <- printAny { (xRange, yRange) }
 
-    _ <- printAny { findY(yRange) }
-    //_ <- printAny { checkY(9, 20) }
-    //_ <- printAny { checkX(6, 20) }
+    _ <- printAny { part1(yRange) }
+    _ <- printAny { part2(xRange, yRange) }
 
   } yield ()
 }

@@ -12,6 +12,5 @@ BigInt("101010001100011111110001001011101001", 2).longValue
 //"abc".toBoolean
 //"trues".toBoolean
 
-"true".toInt
 
-"false".toInt
+(-3 to 3).toList

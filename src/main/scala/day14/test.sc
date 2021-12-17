@@ -1,9 +1,9 @@
 def binaryToDecimal(value: String) = Integer.parseInt(value, 2)
 
-//binaryToDecimal("00010100")
+binaryToDecimal("100")
 
 //20.toBinaryString
 
 
 //"abc".toBoolean
-"trues".toBoolean
+//"trues".toBoolean

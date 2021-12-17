@@ -91,6 +91,7 @@ object Solution {
         packets: List[Packet] = List.empty
     ): IO[(Buffer, List[Packet])] = {
       require(length > 0)
+      println(s"readLength buffer: $buffer")
       println(s"readLength length: $length")
       for {
         taken <- buffer.take(length)
@@ -100,7 +101,7 @@ object Solution {
         taken <-
           if (subBuffer.isEmpty) IO { (buffer, packets :+ packet) }
           else readLength(subBuffer, subBuffer.length, packets :+ packet)
-        (buffer, packets) = taken
+        (_, packets) = taken
       } yield (buffer, packets)
     }
 
@@ -110,28 +111,30 @@ object Solution {
         packets: List[Packet] = List.empty
     ): IO[(Buffer, List[Packet])] = {
       require(count > 0)
+      println(s"readCount buffer: $buffer")
       println(s"readCount length: $count")
       for {
         taken <- reads(buffer)
-        (subBuffer, packet) = taken
+        (buffer, packet) = taken
         newCount = count - 1
         taken <-
           if (newCount == 0) IO { (buffer, packets :+ packet) }
-          else readCount(subBuffer, newCount, packets :+ packet)
+          else readCount(buffer, newCount, packets :+ packet)
         (buffer, packets) = taken
       } yield (buffer, packets)
     }
 
     def reads(buffer: Buffer): IO[(Buffer, Packet)] = {
-      println(s"BUFFER: $buffer")
       val id = binaryToDecimal(buffer.scan(3, 6))
+      println(s"BUFFER: $buffer, $id")
 
       for {
-        res <- id match {
+        result <- id match {
           case LITERAL => readLiteral(buffer)
           case _       => readOperator(buffer)
         }
-      } yield res
+        _ = println(s"result: $result")
+      } yield result
     }
   }
 

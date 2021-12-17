@@ -36,47 +36,36 @@ object Solution {
           buffer: Buffer,
           contents: List[String] = List.empty
       ): IO[(Buffer, List[String])] = for {
-        taken <- buffer.take(1)
-        (buffer, keepReading) = taken
-        taken <- buffer.take(4)
-        (buffer, content) = taken
-        taken <-
+        (buffer, keepReading) <- buffer.take(1)
+        (buffer, content) <- buffer.take(4)
+        (buffer, contents) <-
           if (keepReading == "1") readContent(buffer, contents :+ content)
           else IO.pure { (buffer, contents :+ content) }
-        (buffer, contents) = taken
       } yield (buffer, contents)
 
       for {
-        taken <- buffer.take(3)
-        (buffer, version) = taken
+        (buffer, version) <- buffer.take(3)
         buffer <- buffer.consume(3) //id for literal is 4
-        taken <- readContent(buffer)
-        (buffer, contents) = taken
+        (buffer, contents) <- readContent(buffer)
       } yield (buffer, Literal(binaryToDecimal(version), contents))
     }
 
     def readOperator(buffer: Buffer): IO[(Buffer, Operator)] = {
       for {
-        taken <- buffer.take(3)
-        (buffer, version) = taken
-        taken <- buffer.take(3)
-        (buffer, id) = taken
-        taken <- buffer.take(1)
-        (buffer, lengthId) = taken
+        (buffer, version) <- buffer.take(3)
+        (buffer, id) <- buffer.take(3)
+        (buffer, lengthId) <- buffer.take(1)
         taken <-
           if (lengthId == "0") {
             for {
-              taken <- buffer.take(15)
-              (buffer, length) = taken
+              (buffer, length) <- buffer.take(15)
             } yield readLength(buffer, binaryToDecimal(length))
           } else {
             for {
-              taken <- buffer.take(11)
-              (buffer, count) = taken
+              (buffer, count) <- buffer.take(11)
             } yield readCount(buffer, binaryToDecimal(count))
           }
-        taken <- taken
-        (buffer, packets) = taken
+        (buffer, packets) <- taken
       } yield (
         buffer,
         Operator(binaryToDecimal(version), binaryToDecimal(id), packets)
@@ -90,15 +79,13 @@ object Solution {
     ): IO[(Buffer, List[Packet])] = {
       require(length > 0)
       for {
-        taken <- buffer.take(length)
-        (buffer, content) = taken
-        taken <- reads(Buffer(content))
-        (subBuffer, packet) = taken
-        taken <-
+        (buffer, content) <- buffer.take(length)
+        (subBuffer, packet) <- reads(Buffer(content))
+        // this sub-buffer is going to get depleted and is not used further
+        (_, packets) <-
           if (subBuffer.isEmpty) IO { (buffer, packets :+ packet) }
           else readLength(subBuffer, subBuffer.length, packets :+ packet)
-        (_, packets) =
-          taken // this sub-buffer is going to get depleted and is not used further
+
       } yield (buffer, packets)
     }
 
@@ -109,13 +96,11 @@ object Solution {
     ): IO[(Buffer, List[Packet])] = {
       require(count > 0)
       for {
-        taken <- reads(buffer)
-        (buffer, packet) = taken
+        (buffer, packet) <- reads(buffer)
         newCount = count - 1
-        taken <-
+        (buffer, packets) <-
           if (newCount == 0) IO { (buffer, packets :+ packet) }
           else readCount(buffer, newCount, packets :+ packet)
-        (buffer, packets) = taken
       } yield (buffer, packets)
     }
 
@@ -158,25 +143,35 @@ object Solution {
     override def toString = value.toString
   }
 
-  case class Operator(version: Int, id: Int, packets: List[Packet]) extends Packet {
+  case class Operator(version: Int, id: Int, packets: List[Packet])
+      extends Packet {
     def value: Long = id match {
-      case SUM => packets.map(_.value).sum
+      case SUM     => packets.map(_.value).sum
       case PRODUCT => packets.map(_.value).product
-      case MIN => packets.map(_.value).min
-      case MAX => packets.map(_.value).max
+      case MIN     => packets.map(_.value).min
+      case MAX     => packets.map(_.value).max
       // is there any wy of passing operator >/</== as a function
-      case GREATER_THAN => packets match {
-        case first :: second :: Nil => if (first.value > second.value) 1L else 0L
-        case _ => throw new Error("GREATER_THAN should have exactly two sub packets")
-      }
-      case LESS_THAN => packets match {
-        case first :: second :: Nil => if (first.value < second.value) 1L else 0L
-        case _ => throw new Error("GREATER_THAN should have exactly two sub packets")
-      }
-      case EQUAL => packets match {
-        case first :: second :: Nil => if (first.value == second.value) 1L else 0L
-        case _ => throw new Error("GREATER_THAN should have exactly two sub packets")
-      }
+      case GREATER_THAN =>
+        packets match {
+          case first :: second :: Nil =>
+            if (first.value > second.value) 1L else 0L
+          case _ =>
+            throw new Error("GREATER_THAN should have exactly two sub packets")
+        }
+      case LESS_THAN =>
+        packets match {
+          case first :: second :: Nil =>
+            if (first.value < second.value) 1L else 0L
+          case _ =>
+            throw new Error("GREATER_THAN should have exactly two sub packets")
+        }
+      case EQUAL =>
+        packets match {
+          case first :: second :: Nil =>
+            if (first.value == second.value) 1L else 0L
+          case _ =>
+            throw new Error("GREATER_THAN should have exactly two sub packets")
+        }
     }
   }
 

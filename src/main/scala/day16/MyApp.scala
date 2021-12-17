@@ -1,10 +1,8 @@
 package day16
 
 import cats.effect.{IO, IOApp}
-import day16.Solution.Packet.{LITERAL, reads}
+import day16.Solution.Packet._
 import day16.Utils._
-
-import scala.annotation.tailrec
 
 //https://adventofcode.com/2021/day/16
 object Solution {
@@ -25,6 +23,13 @@ object Solution {
 
   object Packet {
     val LITERAL: Int = 4
+    val SUM: Int = 0
+    val PRODUCT: Int = 1
+    val MIN: Int = 2
+    val MAX: Int = 3
+    val GREATER_THAN: Int = 5
+    val LESS_THAN: Int = 6
+    val EQUAL: Int = 7
 
     def readLiteral(buffer: Buffer): IO[(Buffer, Literal)] = {
       def readContent(
@@ -141,9 +146,10 @@ object Solution {
     loop(packet)
   }
 
-  sealed trait Packet {
+  sealed trait Packet { self: Packet =>
     def version: Int
     def id: Int
+    def value: Long
   }
 
   case class Literal(version: Int, content: List[String]) extends Packet {
@@ -152,12 +158,27 @@ object Solution {
     override def toString = value.toString
   }
 
-  case object Operator {
-    def dummy: Operator = Operator(0, 0, List.empty)
+  case class Operator(version: Int, id: Int, packets: List[Packet]) extends Packet {
+    def value: Long = id match {
+      case SUM => packets.map(_.value).sum
+      case PRODUCT => packets.map(_.value).product
+      case MIN => packets.map(_.value).min
+      case MAX => packets.map(_.value).max
+      // is there any wy of passing operator >/</== as a function
+      case GREATER_THAN => packets match {
+        case first :: second :: Nil => if (first.value > second.value) 1L else 0L
+        case _ => throw new Error("GREATER_THAN should have exactly two sub packets")
+      }
+      case LESS_THAN => packets match {
+        case first :: second :: Nil => if (first.value < second.value) 1L else 0L
+        case _ => throw new Error("GREATER_THAN should have exactly two sub packets")
+      }
+      case EQUAL => packets match {
+        case first :: second :: Nil => if (first.value == second.value) 1L else 0L
+        case _ => throw new Error("GREATER_THAN should have exactly two sub packets")
+      }
+    }
   }
-
-  case class Operator(version: Int, id: Int, packets: List[Packet])
-      extends Packet
 
   val program = for {
     input <- readHex("day16/input.txt")
@@ -170,6 +191,8 @@ object Solution {
 
     _ <- printAny { packet }
     _ <- printAny { s"part1: ${versionSum(packet)}" }
+
+    _ <- printAny { s"part2: ${packet.value}" }
 
   } yield ()
 }

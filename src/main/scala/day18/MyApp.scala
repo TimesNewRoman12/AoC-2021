@@ -53,8 +53,38 @@ object Solution {
     "1111"
   )
 
-  def allLevels: Seq[String] = List("0", "00", "000", "0000", "0001", "001", "01", "010", "0010", "0011", "0100", "0101", "011", "0110", "0111",
-  "1", "10", "100", "1000", "1001", "101", "11", "110", "1010", "1011", "1100", "1101", "111", "1110", "1111")
+  def allLevels: Seq[String] = List(
+    "0",
+    "00",
+    "000",
+    "0000",
+    "0001",
+    "001",
+    "01",
+    "010",
+    "0010",
+    "0011",
+    "0100",
+    "0101",
+    "011",
+    "0110",
+    "0111",
+    "1",
+    "10",
+    "100",
+    "1000",
+    "1001",
+    "101",
+    "11",
+    "110",
+    "1010",
+    "1011",
+    "1100",
+    "1101",
+    "111",
+    "1110",
+    "1111"
+  )
 
   sealed trait SnailfishNumber {
     def reduce: SnailfishNumber
@@ -142,8 +172,6 @@ object Solution {
         }
       }
 
-      println(s"get: ${get(depth)}")
-
       loop(depth.toList, this)
     }
 
@@ -153,7 +181,6 @@ object Solution {
         toBinaryString(Integer.parseInt(depth, 2) - 1),
         toBinaryString(Integer.parseInt(depth, 2) + 1)
       )
-      _ = println(s"left: $left, right: $right")
       replaced = replace(depth, RegularNumber(0))
       leftR = pair.p1 match {
         case RegularNumber(value) if depth != "0000" =>
@@ -179,14 +206,10 @@ object Solution {
 
     def reduce: Pair = {
       def loop(pair: Pair): Pair = {
-        println(s"before exploded: $pair")
         val exploded = pair.explode
-        println(s"exploded: $exploded")
         if (exploded != pair) loop(exploded)
         else {
-          println(s"before split: $pair")
           val splitted = pair.split
-          println(s"after split: $splitted")
           if (splitted != pair) loop(splitted)
           else pair
         }
@@ -223,16 +246,22 @@ object Solution {
       }
   }
 
-  def numbers(buffers: List[Buffer]) = {
-    val r = for {
-      buffer <- buffers
-    } yield fromBuffer(buffer).map { case (_, n: Pair) => n }
+  def numbers(buffers: List[Buffer]) = (for {
+    buffer <- buffers
+  } yield fromBuffer(buffer).map { case (_, n: Pair) => n }).sequence
 
-    r.sequence
-  }
+  def part1(numbers: List[Pair]): Int =
+    numbers.reduce[Pair] { case (n1, n2) => (n1 + n2).reduce }.magnitude
 
-  def part1(numbers: List[SnailfishNumber]) =
-    numbers.reduce[SnailfishNumber] { case (n1: Pair, n2: Pair) => (n1 + n2).reduce }.magnitude
+  def part2(numbers: List[Pair]) = (for {
+    n1 <- numbers
+    i <- numbers.indices
+    n2 = numbers(i)
+    if n1 != n2
+  } yield Math.max(
+    (n1 + n2).reduce.magnitude,
+    (n2 + n1).reduce.magnitude
+  )).max
 
   val program = for {
     input <- readLines("day18/input.txt")
@@ -242,26 +271,7 @@ object Solution {
     sfNumbers <- numbers(buffers)
 
     _ <- printAny { part1(sfNumbers) }
-
-    //_ <- printAny { number.get("0111") }
-    // [[[[[9,8],1],2],3],4]
-    //_ <- printAny { number.get("0000") }
-    //_ <- printAny { number.get("0001") }
-    //_ <- printAny { number.findFirstToExplode }
-
-    //_ <- printAny { reduced.get("10") }
-    //_ <- printAny { reduced.split }
-
-    // [[3, [2, [[7, 3], 1]]], [6, [5, [4, [3, 2]]]]]
-    //_ <- printAny { number.get("0110") }
-    //_ <- printAny { number.get("0111") }
-    //_ <- printAny { number.get("010") } // 0101
-    // [[3, [2, [1, [7, 3]]]], [6, [5, [4, [3, 2]]]]]
-    //_ <- printAny { number.get("0111") }
-    //_ <- printAny { number.get("0110") }
-    //_ <- printAny { number.get("1") } // 1000
-
-    //_ <- printAny { number.get("1") }
+    _ <- printAny { part2(sfNumbers) }
 
   } yield ()
 }
